@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Safety Maintenance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <style>
+        body {
+            background-image: url('https://cdn.pixabay.com/photo/2024/08/03/10/09/construction-8941880_1280.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            margin-top: 100px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: transparent;
+            border: none;
+            font-size: 24px;
+            color: #007bff;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .section-title {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        input[type="text"], button {
+            padding: 10px;
+            margin: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #mainContent {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                width: 100%;
+            }
+
+            input[type="text"], button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="loadLoginPage()">&larr;</button>
+    <div id="app"></div>
+
+    <script>
+        const maxManagers = 3;
+        const maxWorkers = 5;
+        let currentManagers = 0;
+        let currentWorkers = 0;
+
+        const users = []; // Array to store user data
+        const voiceCommands = []; // Array to store voice and text commands reported by workers
+        const safetyCheckNotifications = []; // Array to store safety check notifications
+        const auditTrail = []; // Array to store audit trail logs
+        const safetyProtocols = []; // Array to store safety protocols
+
+        let currentUser = null; // Store the currently logged-in user
+        let taskVerificationStatus = {
+            helmet: false,
+            gloves: false,
+            shoes: false
+        };
+
+        async function sendNotification(workerName, report) {
+            const worker = users.find(user => user.name === workerName && user.role === 'worker');
+            if (worker) {
+                try {
+                    const response = await fetch('/report-hazard', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            workerName,
+                            report,
+                            email: worker.email,
+                            phone: worker.phone
+                        })
+                    });
+                    if (response.ok) {
+                        console.log('Notification sent successfully');
+                    } else {
+                        console.error('Failed to send notification');
+                    }
+                } catch (error) {
+                    console.error('Error sending notification:', error);
+                }
+            }
+        }
+
+        function loadLoginPage() {
+            document.getElementById('app').innerHTML = `
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card mt-5">
+                                <div class="card-header">
+                                    <h3>Construction Safety Maintenance Login</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="loginForm">
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="username" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="role" class="form-label">Role</label>
+                                            <select class="form-control" id="role" required>
+                                                <option value="">Select Role</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="worker">Worker</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">Login</button>
+                                            <button type="button" class="btn btn-secondary" onclick="loadSignUpPage()">Sign Up</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('loginForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                var username = document.getElementById('username').value;
+                var password = document.getElementById('password').value;
+                var role = document.getElementById('role').value;
+
+                const user = users.find(user => user.email === username && user.password === password && user.role === role);
+                if (user) {
+                    currentUser = user; // Set the current user
+                    if (role === 'manager') {
+                        if (currentManagers < maxManagers) {
+                            currentManagers++;
+                            alert('Login successful! Welcome Manager.');
+                            loadManagerPage();
+                        } else {
+                            alert('Maximum number of managers logged in. Please try again later.');
+                        }
+                    } else if (role === 'worker') {
+                        if (currentWorkers < maxWorkers) {
+                            currentWorkers++;
+                            alert('Login successful! Welcome Worker.');
+                            loadWorkerPage(user.name);
+                        } else {
+                            alert('Maximum number of workers logged in. Please try again later.');
+                        }
+                    }
+                } else {
+                    alert('Invalid username, password, or role.');
+                }
+            });
+        }
+
+        function loadSignUpPage() {
+            document.getElementById('app').innerHTML = `
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card mt-5">
+                                <div class="card-header">
+                                    <h3>Construction Safety Maintenance Sign Up</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="signUpForm">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Name</label>
+                                            <input type="text" class="form-control" id="name" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Create Password</label>
+                                            <input type="password" class="form-control" id="password" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="text" class="form-control" id="phone" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="role" class="form-label">Role</label>
+                                            <select class="form-control" id="role" required>
+                                                <option value="">Select Role</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="worker">Worker</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">Sign Up</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('signUpForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                var name = document.getElementById('name').value;
+                var email = document.getElementById('email').value;
+                var password = document.getElementById('password').value;
+                var phone = document.getElementById('phone').value;
+                var role = document.getElementById('role').value;
+
+                users.push({ name, email, password, phone, role });
+                alert('Sign up successful! Name: ' + name + ', Email: ' + email + ', Role: ' + role);
+                loadLoginPage();
+            });
+        }
+
+        function loadManagerPage() {
+            document.getElementById('app').innerHTML = 
+                `<div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <div class="card mt-5">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3>Manager Dashboard</h3>
+                                    <button class="btn btn-danger" onclick="loadLoginPage()">Logout</button>
+                                </div>
+                                <div class="card-body">
+                                    <p>Welcome, Manager! Here you can manage construction safety maintenance tasks.</p>
+                                    
+                                    <h4 class="section-title">Dashboard</h4>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Alerts</h5>
+                                                    <ul id="alerts-list" class="list-group">
+                                                        ${voiceCommands.map(command => `<li class="list-group-item">${command}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Reports</h5>
+                                                    <ul id="reports-list" class="list-group">
+                                                        ${safetyCheckNotifications.map(notification => `<li class="list-group-item">${notification}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Overall Safety Metrics</h5>
+                                                    <p>Number of workers: ${currentWorkers}</p>
+                                                    <p>Number of managers: ${currentManagers}</p>
+                                                    <p>Safety checks completed: ${safetyCheckNotifications.length}</p>
+                                                    <p>Alerts reported: ${voiceCommands.length}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 class="section-title">Real-Time Notifications</h4>
+                                    <ul id="voice-commands-list" class="list-group mb-3">
+                                        ${voiceCommands.map(command => `<li class="list-group-item">${command}</li>`).join('')}
+                                    </ul>
+                                    
+                                    <h4 class="section-title">Video/Image Analysis Results</h4>
+                                    <ul id="safety-check-notifications" class="list-group mb-3">
+                                        ${safetyCheckNotifications.map(notification => `<li class="list-group-item">${notification}</li>`).join('')}
+                                    </ul>
+                                    <p>For more detailed analysis, visit the <a href="https://teachablemachine.withgoogle.com/models/VFgOAlKZz/" target="_blank">Teachable Machine Model</a>.</p>
+                                    
+                                    <h4 class="section-title">Audit Trail</h4>
+                                    <ul id="audit-trail-list" class="list-group mb-3">
+                                        ${auditTrail.map(log => `<li class="list-group-item">${log.time} - ${log.user} - ${log.action} - ${log.details}</li>`).join('')}
+                                    </ul>
+                                    
+                                    <div>
+                                        <h4 class="section-title">Audit Trail Safety Actions</h4>
+                                        <input type="text" id="auditAction" placeholder="Action" class="form-control mb-2" />
+                                        <input type="text" id="auditDetails" placeholder="Details" class="form-control mb-2" />
+                                        <button class="btn btn-primary" onclick="addAuditTrail()">Add Audit Trail Action</button>
+                                    </div>
+                                    
+                                    <h4 class="section-title">Safety Protocol Management</h4>
+                                    <p>View and edit safety procedures.</p>
+                                    <ul id="safety-protocol-list" class="list-group mb-3">
+                                        ${safetyProtocols.map((protocol, index) => 
+                                            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>${protocol}</span>
+                                                <button class="btn btn-danger btn-sm" onclick="removeSafetyProtocol(${index})">Delete</button>
+                                            </li>`
+                                        ).join('')}
+                                    </ul>
+                                    <input type="text" id="newSafetyProtocol" placeholder="New Safety Protocol" class="form-control mb-2" />
+                                    <button class="btn btn-primary" onclick="addSafetyProtocol()">Add Safety Protocol</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function addAuditTrail() {
+            const action = document.getElementById('auditAction').value;
+            const details = document.getElementById('auditDetails').value;
+            if (action && details) {
+                const currentTime = new Date().toLocaleString();
+                const log = {
+                    time: currentTime,
+                    user: currentUser.username,
+                    action,
+                    details
+                };
+                auditTrail.push(log);
+                updateAuditTrailUI();
+                document.getElementById('auditAction').value = '';
+                document.getElementById('auditDetails').value = '';
+            } else {
+                alert('Please enter both action and details.');
+            }
+        }
+
+        function updateAuditTrailUI() {
+            const auditTrailList = document.getElementById('audit-trail-list');
+            auditTrailList.innerHTML = '';
+            auditTrail.forEach(log => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item';
+                listItem.innerHTML = `${log.time} - ${log.user} - ${log.action} - ${log.details}`;
+                auditTrailList.appendChild(listItem);
+            });
+        }
+
+        function addSafetyProtocol() {
+            const newProtocol = document.getElementById('newSafetyProtocol').value;
+            if (newProtocol) {
+                safetyProtocols.push(newProtocol);
+                updateSafetyProtocolUI();
+                document.getElementById('newSafetyProtocol').value = '';
+            } else {
+                alert('Please enter a safety protocol.');
+            }
+        }
+
+        function removeSafetyProtocol(index) {
+            if (confirm('Are you sure you want to delete this safety protocol?')) {
+                safetyProtocols.splice(index, 1);
+                updateSafetyProtocolUI();
+            }
+        }
+
+        function editSafetyProtocol(index) {
+            const protocolText = document.getElementById(`protocol-text-${index}`);
+            const newProtocol = prompt('Edit Safety Protocol:', protocolText.textContent);
+            if (newProtocol !== null) {
+                safetyProtocols[index] = newProtocol;
+                updateSafetyProtocolUI();
+            }
+        }
+
+        function updateSafetyProtocolUI() {
+            const safetyProtocolList = document.getElementById('safety-protocol-list');
+            safetyProtocolList.innerHTML = '';
+            safetyProtocols.forEach((protocol, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <span id="protocol-text-${index}">${protocol}</span>
+                    <div>
+                        <button class="btn btn-warning btn-sm" onclick="editSafetyProtocol(${index})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="removeSafetyProtocol(${index})">Delete</button>
+                    </div>
+                `;
+                safetyProtocolList
+                safetyProtocolList.appendChild(listItem);
+            });
+        }
+
+        function loadWorkerPage(workerName) {
+            document.getElementById('app').innerHTML = `
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card mt-5">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3>Worker Dashboard</h3>
+                                    <button class="btn btn-danger" onclick="loadLoginPage()">Logout</button>
+                                </div>
+                                <div class="card-body">
+                                    <p>Welcome, ${workerName}! Here you can view and complete your assigned tasks.</p>
+                                    <h4>Safety Tasks</h4>
+                                    <ul id="tasks-list" class="list-group mb-3">
+                                        <li class="list-group-item">
+                                            Wear helmet
+                                            <input type="file" class="form-control mt-2" id="helmetUpload" accept="image/*" onchange="analyzeTaskImage(event, 'helmet')">
+                                        </li>
+                                        <li class="list-group-item">
+                                            Wear gloves
+                                            <input type="file" class="form-control mt-2" id="glovesUpload" accept="image/*" onchange="analyzeTaskImage(event, 'gloves')">
+                                        </li>
+                                        <li class="list-group-item">
+                                            Wear shoes
+                                            <input type="file" class="form-control mt-2" id="shoesUpload" accept="image/*" onchange="analyzeTaskImage(event, '<li class="list-group-item">
+                                            Wear shoes
+                                            <input type="file" class="form-control mt-2" id="shoesUpload" accept="image/*" onchange="analyzeTaskImage(event, 'shoes')">
+                                        </li>
+                                    </ul>
+                                    <button class="btn btn-warning mb-3" onclick="startVoiceCommand('${workerName}')">Voice Command</button>
+                                    <div class="mb-3">
+                                        <label for="textCommand" class="form-label">Report Hazard</label>
+                                        <input type="text" class="form-control" id="textCommand" placeholder="Type your hazard report here">
+                                        <button class="btn btn-primary mt-2" onclick="submitTextCommand('${workerName}')">Submit</button>
+                                    </div>
+                                    <div id="analysisResult" class="mt-3"></div>
+                                    <button class="btn btn-success mt-3" onclick="verifySafetyTasks()">Verify Safety Tasks</button>
+                                    <h4>Safety Guidelines</h4>
+                                    <p>Always wear a helmet, safety vest, and gloves. Ensure all tools are in good condition before use. Follow all safety signs and instructions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function analyzeTaskImage(event, task) {
+            const file = event.target.files[0];
+            if (!file) {
+                alert('Please upload an image.');
+                return;
+            }
+
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = async () => {
+                const model = await cocoSsd.load();
+                const predictions = await model.detect(img);
+                const analysisResult = document.getElementById('analysisResult');
+                analysisResult.innerHTML = `<h5>Analysis Result for ${task}:</h5>`;
+                let taskVerified = false;
+
+                predictions.forEach(prediction => {
+                    const confidence = Math.round(prediction.score * 100);
+                    const p = document.createElement('p');
+                    p.textContent = `${prediction.class}: ${confidence}% confidence`;
+                    analysisResult.appendChild(p);
+
+                    // Mock verification for specific equipment
+                    if ((task === "helmet" && prediction.class === "person" && confidence >= 70) ||
+                        (task === "gloves" && prediction.class === "person" && confidence >= 70) ||
+                        (task === "shoes" && prediction.class === "person" && confidence >= 70)) {
+                        taskVerificationStatus[task] = true;
+                    }
+                });
+
+                if (taskVerificationStatus[task]) {
+                    analysisResult.innerHTML += `<p class="text-success">${task} verified successfully.</p>`;
+                } else {
+                    analysisResult.innerHTML += `<p class="text-danger">${task} not verified.</p>`;
+                }
+            };
+        }
+
+        function verifySafetyTasks() {
+            const tasks = ['helmet', 'gloves', 'shoes'];
+            let allTasksVerified = true;
+
+            tasks.forEach(task => {
+                if (!taskVerificationStatus[task]) {
+                    allTasksVerified = false;
+                }
+            });
+
+            if (allTasksVerified) {
+                safetyCheckNotifications.push('Safety check successfully completed by worker.');
+                alert('Safety check successfully completed.');
+            } else {
+                alert('Safety check incomplete. Please ensure all safety tasks are verified.');
+            }
+        }
+
+        function startVoiceCommand(workerName) {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                const report = `Hazard reported by ${workerName}: ${transcript}`;
+                alert(report);
+                voiceCommands.push(report);
+                sendNotification(workerName, report); // Send email and SMS notification
+            };
+
+            recognition.onspeechend = function() {
+                recognition.stop();
+            };
+
+            recognition.onerror = function(event) {
+                alert('Error occurred in recognition: ' + event.error);
+            };
+        }
+
+        function submitTextCommand(workerName) {
+            const textCommand = document.getElementById('textCommand').value;
+            if (textCommand) {
+                const report = `Hazard reported by ${workerName}: ${textCommand}`;
+                alert(report);
+                voiceCommands.push(report);
+                sendNotification(workerName, report); // Send email and SMS notification
+                document.getElementById('textCommand').value = ''; // Clear the input field
+            } else {
+                alert('Please enter a hazard report.');
+            }
+        }
+
+        // Load login page by default
+        loadLoginPage();
+    </script>
+</body>
+</html>
