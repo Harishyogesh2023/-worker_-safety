@@ -1,101 +1,98 @@
 # SiteSafe AI
 
-SiteSafe AI is a construction safety management platform designed to improve worker protection, streamline hazard reporting, and provide managers with real-time visibility into site safety compliance.
+SiteSafe AI is a construction safety management web application developed as a hackathon project and presented as part of the innovation ecosystem at NIT Trichy. The platform is designed to improve workplace safety by helping workers complete PPE compliance checks, report hazards in real time, and give site managers a centralized view of safety activity.
 
-This project began as a hackathon frontend prototype and has been evolved into an engineering-ready product concept for modern construction environments. It focuses on practical workplace safety workflows including PPE verification, voice-based hazard reporting, audit tracking, and manager oversight.
+The project focuses on solving a practical problem in construction environments: safety checks are often manual, inconsistent, and difficult to monitor across large work sites. SiteSafe AI brings a simple, user-friendly digital workflow to manage those checks more efficiently and transparently.
 
-## Why this project matters
+## Project Overview
 
-Construction sites are high-risk environments where workers operate around equipment, height risks, moving vehicles, and hazardous material handling. Safety incidents often happen because of inconsistent PPE compliance, delayed reporting, and poor communication between workers and supervisors. SiteSafe AI addresses this by creating a digital workflow that supports real-time action and accountability.
+SiteSafe AI combines modern web interfaces with AI-assisted image analysis to support on-site safety operations. Workers can validate required protective equipment such as helmets, gloves, and safety shoes, while managers can review reports, monitor compliance, and manage site protocols from a central dashboard.
 
-## Problem statement
+This solution demonstrates how AI and front-end technologies can be used to strengthen operational safety, reduce risk, and create more accountable systems for construction teams.
 
-In many construction projects, safety checks are still performed manually and inconsistently. Workers may forget mandatory PPE checks, hazards may go unreported, and managers often lack a centralized place to monitor alerts, actions, and compliance records. This leads to operational delays, increased risk, and poor auditability.
+## Why This Project Matters
 
-## Solution overview
+Construction sites involve high-risk work conditions where employees are exposed to hazards such as falling objects, unsafe equipment use, moving vehicles, and inadequate protective gear. In many situations, safety checks still rely on manual inspections or delayed reporting methods.
 
-SiteSafe AI provides a role-based safety management experience:
+SiteSafe AI addresses this by creating a digital safety workflow that:
 
-1. Workers log in and verify required PPE compliance.
-2. Workers upload safety-related images for visual inspection.
-3. Hazard incidents can be reported through speech or text.
-4. Managers review safety alerts, compliance checks, and audit logs.
-5. Safety protocols are documented and maintained through a protocol dashboard.
+- supports worker self-checks before site entry
+- allows quick hazard reporting from the field
+- helps managers stay informed about active safety issues
+- provides an organized system for tracking compliance and audits
 
-## Target users
+## Hackathon Context
 
-- Construction workers
-- Site supervisors and managers
-- Safety officers
-- Project operations teams
+This project was developed as a hackathon submission and reflects a strong focus on solving a real-world industry challenge with a practical, impactful product concept. The work was created during participation at NIT Trichy, where the goal was to build an intuitive safety-focused solution that could demonstrate both technical innovation and social value.
 
-## Features
+## Core Features
 
-- Role-based login for managers and workers
-- PPE verification workflow using uploaded images
-- object detection using TensorFlow.js / COCO-SSD
-- voice hazard reporting using browser speech recognition
-- text-based hazard reporting for manual incident entry
-- manager dashboard with live alerts and safety metrics
-- audit trail for site actions and compliance review
-- protocol management for safety rules and operational procedures
-- responsive UI for desktop and mobile access
+- Worker and manager role-based login flow
+- PPE verification workflow for helmets, gloves, and shoes
+- AI-assisted image assessment using TensorFlow.js and COCO-SSD
+- Voice-based hazard reporting using browser speech recognition
+- Manual text reporting for hazards and unsafe conditions
+- Manager dashboard with live safety alerts and compliance statistics
+- Audit log tracking for site safety actions
+- Safety protocol management panel for administrators
+- Responsive interface for desktop and mobile usage
 
-## Tech stack
+## Tech Stack
 
 - HTML5
 - CSS3
+- JavaScript
 - Bootstrap 5
-- JavaScript (Vanilla)
 - TensorFlow.js
-- COCO-SSD model
+- COCO-SSD Object Detection
+- Browser Speech Recognition API
 
-## Project structure
+## System Workflow
+
+### Worker Flow
+
+1. A worker logs in to the worker dashboard.
+2. The worker completes PPE verification tasks by uploading images.
+3. The application analyzes the image using object detection to estimate task compliance.
+4. The worker can report hazards either by voice input or by typing a report.
+5. Safety records and compliance updates are tracked for manager review.
+
+### Manager Flow
+
+1. A manager logs in to the dashboard.
+2. The dashboard displays live hazard alerts and safety checks.
+3. The manager reviews audit records and site compliance trends.
+4. Safety protocols can be updated or managed from the control panel.
+
+## Project Structure
 
 ```text
 .
-├── index.html          # Main app entry point
-├── app.js              # UI logic, state, and workflows
-├── styles.css          # Design system and responsive layout
-├── package.json        # Local project metadata and scripts
-├── exindex.html        # Original hackathon reference file
+├── index.html          # Main app shell
+├── app.js              # Application logic and dashboard flows
+├── styles.css          # UI styling and responsive design
+├── package.json        # Project metadata and scripts
+├── exindex.html        # Reference prototype / earlier hackathon iteration
 ├── README.md           # Project documentation
-└── LICENSE             # Optional license placeholder if needed
+└── LICENSE             # Optional license file if added later
 ```
 
-## How it works
-
-### Worker flow
-
-- Sign up or log in to the worker portal.
-- Upload an image to verify required PPE such as a helmet, gloves, or safety shoes.
-- The app uses TensorFlow.js object detection to analyze the image and assess compliance.
-- Workers can report hazards through voice recognition or manual text input.
-- Once safety tasks are verified, the system records a safety check event.
-
-### Manager flow
-
-- Log in to the manager dashboard.
-- Review live hazard notifications and safety reports.
-- Monitor completed compliance checks and audit actions.
-- Manage site-specific safety protocols and operational rules.
-
-## Local setup
+## Local Setup
 
 ### Prerequisites
 
-- Modern browser
-- Python 3.x (for local static serving)
+- Modern web browser
+- Python 3.x (for running the local server)
 - Internet access for CDN-based libraries
 
-### Run the project
+### Run the Project
 
 ```bash
 npm install
 npm run start
 ```
 
-Then open:
+Then open the app in your browser:
 
 ```text
 http://localhost:8000
@@ -107,47 +104,25 @@ You can also run it directly without npm:
 python3 -m http.server 8000
 ```
 
-## Product roadmap
+## Future Scope
 
-### Phase 1: MVP safety workflow
+The current version is a functional prototype focused on proving the concept and demonstrating the workflow. In future iterations, the application can be expanded with:
 
-- worker and manager login
-- PPE task verification
-- hazard reporting through text and voice
-- manager dashboard overview
+- secure authentication and user management
+- persistent backend storage for incidents and compliance logs
+- real-time cloud-based dashboards
+- predictive risk analytics
+- integration with IoT devices and site sensors
+- enterprise deployment for large-scale construction operations
 
-### Phase 2: Data-driven compliance
+## Impact
 
-- persistent storage for users, records, and audit logs
-- site and zone tracking
-- historical analytics and reports
+SiteSafe AI aims to improve safety culture in construction environments by reducing manual effort, encouraging faster reporting, and making safety compliance more measurable and transparent. It is a practical solution built around a meaningful real-world problem and demonstrates the value of AI-driven digital transformation in industrial settings.
 
-### Phase 3: AI-enhanced safety intelligence
+## Project Description (Short Form)
 
-- incident severity classification
-- predictive hazard risk scoring
-- more robust PPE validation models
-
-### Phase 4: Enterprise-ready deployment
-
-- secure login and authorization
-- backend APIs and database integration
-- cloud deployment and reporting tools
-
-## Engineering value
-
-This project is more than a static UI demo. It demonstrates practical product thinking and engineering workflow:
-
-- role-based user flows
-- operational dashboards for site oversight
-- real-time reporting and auditability
-- extensible frontend architecture for future backend integration
-- industry-driven problem solving around workplace safety
-
-## GitHub project description
-
-SiteSafe AI is a construction safety management platform designed to improve worker protection, strengthen hazard reporting, and provide managers with real-time visibility into site safety and compliance. The system allows workers to validate PPE compliance through image-based checks and report hazards using voice or text. Managers can monitor safety alerts, review audit records, and manage site safety protocols from a centralized dashboard. Built as a frontend prototype and evolved into an engineering-ready concept, SiteSafe AI demonstrates how digital workflows can improve accountability, response speed, and operational safety on construction sites.
+SiteSafe AI is a construction safety management platform designed to help workers and managers improve site safety through PPE verification, hazard reporting, and compliance tracking. Built as a hackathon project during participation at NIT Trichy, the platform demonstrates how AI-powered web technologies can be used to create safer and more efficient construction operations.
 
 ## License
 
-This project is currently shared as an open prototype for learning, demonstration, and further engineering development.
+This project is currently shared as a prototype for learning, demonstration, and further development.
