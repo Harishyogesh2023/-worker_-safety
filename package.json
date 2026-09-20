@@ -1,0 +1,10 @@
+{
+  "name": "sitesafe-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Construction safety management platform for workers and managers.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000"
+  }
+}
